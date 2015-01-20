@@ -11,6 +11,46 @@ def isPrime(n):							#check whether a number is prime or not
             return False
     return True
 
+#Miller-Rabin primality test
+def checkMillerRabin(n,k):
+	if n==2: return True
+	if n==1 or n%2==0: return False
+
+	#find s and d, with d odd
+	s=0
+	d=n-1
+	while(d%2==0):
+		d/=2
+		s+=1
+	assert (2**s*d==n-1)
+
+	#witness loop
+	composite=1
+	for i in xrange(k):
+		a=random.randint(2,n-1)
+		x=modular_pow(a,d,n)
+		if x==1 or x==n-1: continue
+		for j in xrange(s-1):
+			composite=1
+			x=modular_pow(x,2,n)
+			if x==1: return False #is composite
+			if x==n-1: 
+				composite=0
+				break
+		if composite==1:
+			return False		#is composite
+	return True					#is probably prime
+
+#perform a Modular exponentiation
+def modular_pow(base, exponent, modulus):
+    result=1
+    while exponent>0:
+        if exponent%2==1:
+           result=(result * base)%modulus
+        exponent=exponent>>1
+        base=(base * base)%modulus
+    return result
+
 def isEvenly(n,k):
 
 	counter=0
@@ -269,3 +309,101 @@ def isLychrel(n):
 			return False
 		iterations+=1
 	return True
+
+def digitSum(n):
+	s=0
+	for d in list(str(n)):
+		s+=int(d)
+	return s
+
+#http://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Continued_fraction_expansion
+#obtain a list of triplets (mn, dn, an). The sequence [a0; a1, a2, a3,...] is the continued fraction expansion
+def continued_fraction_expansion(n):
+	m_before=0
+	d_before=1
+	a0=a_before=int(floor(sqrt(n)))
+
+	mda_triplets=[]
+	period_lenght=0
+
+	while True:
+
+		m_next=d_before*a_before-m_before
+		d_next=int((n-m_next**2)/d_before)
+		a_next=int(floor((a0+m_next)/d_next))
+
+		if(a_before==2*a0 or  ((m_next,d_next,a_next) in mda_triplets)):
+			break
+		else:
+			mda_triplets+=[(m_next,d_next,a_next)]
+			m_before=m_next
+			d_before=d_next
+			a_before=a_next
+			period_lenght+=1
+
+	return mda_triplets,period_lenght
+
+
+# compute the continued fraction convergents to sqrt(D) (potential solutions for the Pell Equation)
+# compute the convergents using the recurrent relations presented in http://mathworld.wolfram.com/PellEquation.html
+def continued_fraction_covergents(D,n_periods):
+
+	expansion,l=continued_fraction_expansion(D)
+
+	for p in xrange(n_periods):			#add periods of triplets (m,d,a)
+		expansion+=expansion[0:l]
+
+	a0=int(floor(sqrt(D)))
+
+	#initialize
+	pn_2=1
+	pn_1=a0
+
+	qn_2=0
+	qn_1=1
+
+	convergents=[]
+	for i in xrange(0,l*(n_periods+1)):			#recursive relations to find convergents	
+		pn=expansion[i][2]*pn_1+pn_2
+		pn_2=pn_1
+		pn_1=pn
+
+		qn=expansion[i][2]*qn_1+qn_2
+		qn_2=qn_1
+		qn_1=qn
+
+		convergents+=[(pn,qn)]
+	return convergents
+
+#find the minimal solution in x , for the Pell Equation
+def find_minimal_solution(convergents,D):
+	found=False
+	max_x=2**128
+	y=0
+	for c in convergents:
+		if c[0]**2-D*c[1]**2==1 and c[0]<max_x:		#check if convergent is solution of the Pell Equation
+			max_x=c[0]
+			y=c[1]
+			found=True
+
+	return [found,max_x,y]
+
+def generate_non_square_roots(N):
+	return [non_square_root(i) for i in xrange(1,N+1) if non_square_root(i)<=N]
+
+#n + floor(1/2 + sqrt(n))
+def non_square_root(n):
+	return n + int(floor(0.5+sqrt(n)))
+
+def sum_digits(n):
+    s=0
+    while n:
+        s+=n%10
+        n/=10
+    return s
+
+def convert_to_number(num):
+	s=''
+	for t in num:
+		s+=''.join(map(str,t))
+	return int(s)
