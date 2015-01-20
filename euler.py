@@ -407,3 +407,17 @@ def convert_to_number(num):
 	for t in num:
 		s+=''.join(map(str,t))
 	return int(s)
+
+def phi(n,primes):
+	#some useful properties
+	if (checkMillerRabin(n,10)==True):		#fast prime check
+		return n-1
+
+	factors=primeFactorization(n,primes)	#prime factors
+	distinctive_prime_factors=set(factors)	
+
+	totient=n
+	for f in distinctive_prime_factors:		#phi = sum (n * 1 - 1/p), p is a distinctive prime factor
+		totient*=(1-1.0/f)
+
+	return totient
