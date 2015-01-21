@@ -420,4 +420,11 @@ def phi(n,primes):
 	for f in distinctive_prime_factors:		#phi = sum (n * 1 - 1/p), p is a distinctive prime factor
 		totient*=(1-1.0/f)
 
-	return totient
+	return totietn
+
+def main():
+	#TODO: testing
+	pass
+
+if __name__ == '__main__':
+	main()
